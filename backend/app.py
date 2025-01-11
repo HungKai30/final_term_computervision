@@ -10,10 +10,8 @@ from ai_module import process_video_and_attendance
 # Flask setup
 app = Flask(__name__, template_folder='../frontend/templates')
 
-# Sửa đường dẫn UPLOAD_FOLDER
+# đường dẫn UPLOAD_FOLDER
 UPLOAD_FOLDER = os.path.join(os.path.dirname(os.path.abspath(__file__)), '../frontend/uploads')
-# Hoặc sử dụng đường dẫn tuyệt đối
-# UPLOAD_FOLDER = 'C:/Users/GIAP/Desktop/Cac mon hoc ky 5/attendance-system/frontend/uploads'
 
 ALLOWED_EXTENSIONS = {'mp4', 'jpg', 'jpeg', 'png', 'xls', 'xlsx'}
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
@@ -488,7 +486,7 @@ def join_class():
 
     return jsonify({'error': 'Unauthorized'}), 403
 
-# Route cho sinh viên (thêm endpoint='get_students_student')
+# Route cho sinh viên 
 @app.route('/get_students_student/<class_id>', endpoint='get_students_student')
 def get_students_student(class_id):
     if 'role' in session and session['role'] == 'student':
