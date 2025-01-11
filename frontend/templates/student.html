@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Student Dashboard</title>
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+  </head>
+  <body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+      <div class="container-fluid">
+        <a class="navbar-brand" href="/">Attendance System</a>
+        <button
+          class="navbar-toggler"
+          type="button"
+          data-bs-toggle="collapse"
+          data-bs-target="#navbarNav"
+          aria-controls="navbarNav"
+          aria-expanded="false"
+          aria-label="Toggle navigation"
+        >
+          <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNav">
+          <ul class="navbar-nav">
+            <li class="nav-item">
+              <a class="nav-link" href="{{ url_for('index') }}">Home</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="{{ url_for('register') }}">Register</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="{{ url_for('login') }}">Login</a>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </nav>
+    <div class="container mt-5">
+      <h1>Welcome, {{ username }}</h1>
+      <h3>This is your student dashboard.</h3>
+      <h1 class="text-center">Student Dashboard</h1>
+      <div class="mt-4" id="join-class-section">
+        <h3>Join a Class</h3>
+        <form id="join-class-form">
+          <div class="mb-3">
+            <label for="class_id" class="form-label">Class ID</label>
+            <input
+              type="text"
+              class="form-control"
+              id="class_id"
+              name="class_id"
+              required
+            />
+          </div>
+          <div class="mb-3">
+            <label for="class_password" class="form-label"
+              >Class Password</label
+            >
+            <input
+              type="password"
+              class="form-control"
+              id="class_password"
+              name="class_password"
+              required
+            />
+          </div>
+          <button type="submit" class="btn btn-primary">Join Class</button>
+        </form>
+      </div>
+
+      <div class="mt-5" id="upload-face-section" style="display: none">
+        <h3>Upload Face Image</h3>
+        <form action="/upload_face" method="POST" enctype="multipart/form-data">
+          <div class="mb-3">
+            <label for="student_id_input" class="form-label">Student ID</label>
+            <input
+              type="text"
+              class="form-control"
+              id="student_id_input"
+              name="student_id_input"
+              required
+            />
+          </div>
+          <div class="mb-3">
+            <label for="face_image" class="form-label">Upload Image</label>
+            <input
+              type="file"
+              class="form-control"
+              id="face_image"
+              name="face_image"
+              accept="image/*"
+              required
+            />
+          </div>
+          <button type="submit" class="btn btn-success">Upload Image</button>
+        </form>
+      </div>
+
+      <div class="mt-5" id="view-attendance-section" style="display: none">
+        <h3>Attendance Records</h3>
+        <form action="/view_attendance" method="GET">
+          <div class="mb-3">
+            <label for="attendance_class_id" class="form-label">Class ID</label>
+            <input
+              type="text"
+              class="form-control"
+              id="attendance_class_id"
+              name="class_id"
+              required
+            />
+          </div>
+          <button type="submit" class="btn btn-info">View Records</button>
+        </form>
+      </div>
+
+      <div class="mt-5" id="student-list-section" style="display: none">
+        <h3>Student List</h3>
+        <table class="table table-striped" id="student-list-table">
+          <thead>
+            <tr>
+              <th>Student ID</th>
+              <th>Name</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+      document.addEventListener("DOMContentLoaded", function () {
+        const joinClassForm = document.getElementById("join-class-form");
+        const uploadFaceSection = document.getElementById(
+          "upload-face-section"
+        );
+        const viewAttendanceSection = document.getElementById(
+          "view-attendance-section"
+        );
+        const studentListSection = document.getElementById(
+          "student-list-section"
+        );
+        const studentListTable = document
+          .getElementById("student-list-table")
+          .getElementsByTagName("tbody")[0];
+
+        joinClassForm.addEventListener("submit", function (event) {
+          event.preventDefault();
+          const classId = document.getElementById("class_id").value;
+          const classPassword = document.getElementById("class_password").value;
+
+          fetch("/join_class", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              class_id: classId,
+              class_password: classPassword,
+            }),
+          })
+            .then((response) => response.json())
+            .then((data) => {
+              if (data.message === "Class joined successfully") {
+                alert("Joined class successfully!");
+                uploadFaceSection.style.display = "block";
+                viewAttendanceSection.style.display = "block";
+                studentListSection.style.display = "block";
+
+                // Lấy danh sách sinh viên và hiển thị
+                fetch(`/get_students_student/${classId}`)
+                  .then((response) => response.json())
+                  .then((students) => {
+                    studentListTable.innerHTML = "";
+                    students.forEach((student) => {
+                      let row = studentListTable.insertRow();
+                      let idCell = row.insertCell();
+                      let nameCell = row.insertCell();
+                      idCell.textContent = student.student_id;
+                      nameCell.textContent = student.name;
+                    });
+                  })
+                  .catch((error) =>
+                    console.error("Error fetching student list:", error)
+                  );
+              } else {
+                alert(data.error || "Failed to join class");
+              }
+            })
+            .catch((error) => console.error("Error:", error));
+        });
+      });
+    </script>
+  </body>
+</html>
