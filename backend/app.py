@@ -6,9 +6,10 @@ import pandas as pd
 from werkzeug.utils import secure_filename
 import mysql.connector
 from ai_module import process_video_and_attendance
-
+import sys
+sys.stdout.reconfigure(encoding='utf-8')
 # Flask setup
-app = Flask(__name__, template_folder='../frontend/templates')
+app = Flask(__name__, template_folder='../frontend/templates', static_folder='../frontend/static', static_url_path='')
 
 # đường dẫn UPLOAD_FOLDER
 UPLOAD_FOLDER = os.path.join(os.path.dirname(os.path.abspath(__file__)), '../frontend/uploads')
@@ -74,76 +75,34 @@ def upload_video():
 def process_attendance():
     if 'role' in session and session['role'] == 'teacher':
         class_id = request.form.get('class_id')
-
         if not class_id:
-            flash('Class ID not found', 'danger')
-            return redirect(url_for('teacher_dashboard'))
+            return jsonify({'error': 'Class ID is required'}), 400
 
-        video_folder = os.path.join(app.config['UPLOAD_FOLDER'], class_id)
-        print(f"Video folder path: {video_folder}")
         try:
-            video_files = [f for f in os.listdir(video_folder) if os.path.isfile(os.path.join(video_folder, f)) and allowed_file(f)]
-            if not video_files:
-                flash(f'No video found for class ID: {class_id}', 'danger')
-                return redirect(url_for('teacher_dashboard'))
+            # Process the video and get attendance data
+            attendance_data = process_video_and_attendance(class_id)
 
-            video_path = os.path.join(video_folder, video_files[0])
-            print(f"Video path: {video_path}")
-
-            attendance_result = process_video_and_attendance(video_path, class_id, app.root_path)
-            print(f"Attendance result: {attendance_result}")
-
+            # Save attendance data to the database
             connection = mysql.connector.connect(**db_config)
-            cursor = connection.cursor(dictionary=True)
-            cursor.execute("SELECT student_id FROM students WHERE class_id = %s", (class_id,))
-            students_in_class = [student['student_id'] for student in cursor.fetchall()]
+            cursor = connection.cursor()
 
-            present_students = []
-            absent_students = []
-            for student_id in students_in_class:
-                status = 'present' if student_id in attendance_result else 'absent'
-
-                cursor.execute("SELECT * FROM attendance WHERE class_id = %s AND student_id = %s AND date = CURDATE()", (class_id, student_id))
-                existing_record = cursor.fetchone()
-
-                if existing_record:
-                    cursor.execute("UPDATE attendance SET status = %s WHERE class_id = %s AND student_id = %s AND date = CURDATE()", (status, class_id, student_id))
-                else:
-                    cursor.execute("INSERT INTO attendance (class_id, student_id, date, status) VALUES (%s, %s, CURDATE(), %s)", (class_id, student_id, status))
-
-                if status == 'present':
-                    present_students.append(student_id)
-                else:
-                    absent_students.append(student_id)
+            for student_id, status in attendance_data.items():
+                sql = "INSERT INTO attendance (class_id, student_id, status) VALUES (%s, %s, %s)"
+                cursor.execute(sql, (class_id, student_id, status))
 
             connection.commit()
-
-            # Tạo DataFrame và lưu vào file Excel
-            df = pd.DataFrame({
-                'Có mặt': present_students,
-                'Vắng mặt': absent_students
-            })
-            excel_filename = f'attendance_{class_id}.xlsx'
-            excel_path = os.path.join(app.config['UPLOAD_FOLDER'], excel_filename)
-            df.to_excel(excel_path, index=False)
-
-            flash('Attendance processed successfully', 'success')
-            return jsonify({'present_students': present_students, 'excel_path': excel_filename}), 200
+            return jsonify({'message': 'Attendance processed successfully'}), 200
 
         except Exception as e:
-            flash(f'Error processing attendance: {str(e)}', 'danger')
-            print(f"Error processing attendance: {e}")
-            import traceback
-            traceback.print_exc()
+            return jsonify({'error': str(e)}), 500
+
         finally:
-            if connection and connection.is_connected():
+            if connection.is_connected():
                 cursor.close()
                 connection.close()
 
-        return redirect(url_for('teacher_dashboard'))
-
-    return jsonify({'error': 'Unauthorized access'}), 403
-
+            return jsonify({'error': 'Unauthorized access'}), 403
+        
 # Route: Register a student
 @app.route('/register_student', methods=['POST'])
 def register_student():
@@ -351,6 +310,7 @@ def upload_student_list():
             return redirect(url_for('teacher_dashboard'))
 
         if file and allowed_file(file.filename):
+            connection = None
             try:
                 # Đọc file excel bằng pandas
                 df = pd.read_excel(file)
@@ -388,7 +348,7 @@ def upload_student_list():
             except Exception as e:
                 flash(f'Error: {e}', 'danger')
             finally:
-                if connection.is_connected():
+                if connection and connection.is_connected():
                     cursor.close()
                     connection.close()
 

@@ -3,7 +3,10 @@ import cv2
 import face_recognition
 import numpy as np
 import mysql.connector
-
+import sys
+import csv
+from datetime import datetime
+sys.stdout.reconfigure(encoding='utf-8')
 # MySQL setup
 db_config = {
     'host': 'localhost',
@@ -62,41 +65,16 @@ def process_video_and_attendance(video_path, class_id, root_path):
 
     print(f"Known encodings: {known_encodings}") # Debug
     print(f"Student IDs: {student_ids}") # Debug
+    
+
 
     video_capture = cv2.VideoCapture(video_path)
     if not video_capture.isOpened():
         print(f"Error: Could not open video at {video_path}.")
         return []
+    
+ 
 
-    attendance = set()
-
-    while True:
-        ret, frame = video_capture.read()
-        if not ret:
-            break
-        print("Processing a frame...")  # Debug
-
-        # Detect faces in the current frame
-        rgb_frame = frame[:, :, ::-1]
-        face_locations = face_recognition.face_locations(rgb_frame)
-        face_encodings = face_recognition.face_encodings(rgb_frame, face_locations)
-
-        for face_encoding in face_encodings:
-            matches = face_recognition.compare_faces(known_encodings, face_encoding)
-            print(f"Matches: {matches}") # Debug
-            face_distances = face_recognition.face_distance(known_encodings, face_encoding)
-            print(f"Face distances: {face_distances}") # Debug
-            try:
-                best_match_index = np.argmin(face_distances)
-                print(f"Best match index: {best_match_index}") # Debug
-
-                if matches[best_match_index]:
-                    attendance.add(student_ids[best_match_index])
-                    print(f"Thêm sinh viên {student_ids[best_match_index]} vào danh sách điểm danh") # Debug
-            except ValueError:
-                print("Error: No face distances to compare.")
-                continue
-
-    video_capture.release()
-    print(f"Attendance result trước khi trả về: {list(attendance)}") # Debug
-    return list(attendance)
+    
+ 
+                
