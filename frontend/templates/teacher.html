@@ -8,14 +8,20 @@
         href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
         rel="stylesheet"
     />
+    <style>
+        .btn {
+            background-color: black !important;
+            border-color: black !important;
+        }
+    </style>
 </head>
 <body>
-    <nav class="navbar navbar-expand-lg navbar-light bg-white">
+    <nav class="navbar navbar-expand-lg navbar-light bg-white" style="height: 100px;">
         <div class="container-fluid">
             <a class="navbar-brand" href="/">
                 <img src="images/1.jpg" alt="Logo" class="img-fluid" style="max-width: 200px; height: auto;">
             </a>
-            <a class="navbar-brand" href="/">Student Attendance System</a>
+            <a class="navbar-brand" href="/"><strong>ATTENDANCE SYSTEM</strong></a>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
                 <span class="navbar-toggler-icon"></span>
             </button>
@@ -34,101 +40,103 @@
             </div>
         </div>
     </nav>
-    <hr>
-
     <div class="container mt-5">
-        <h1>Welcome, {{ username }}</h1>
-        <h3>This is your teacher dashboard.</h3>
+        <div class="jumbotron">
+            <h1 class="display-4">Welcome, {{ username }}</h1>
+            <p class="lead">This is your teacher dashboard.</p>
+            <hr class="my-4">
+            <p>Manage your classes, upload attendance videos, and more.</p>
+        </div>
 
-        <div class="row">
+        <div class="row justify-content-center">
             <div class="col-md-6">
-                <div class="card">
-                    <div class="card-header">
-                        <h4>Create a New Class</h4>
-                    </div>
-                    <div class="card-body">
-                        <form action="/create_class" method="POST">
-                            <div class="mb-3">
-                                <label for="class_id" class="form-label">Class ID</label>
-                                <input type="text" class="form-control" id="class_id" name="class_id" placeholder="Enter unique class ID" required />
-                            </div>
-                            <div class="mb-3">
-                                <label for="class_name" class="form-label">Class Name</label>
-                                <input type="text" class="form-control" id="class_name" name="class_name" placeholder="Enter class name" required />
-                            </div>
-                            <div class="mb-3">
-                                <label for="class_password" class="form-label">Class Password</label>
-                                <input type="password" class="form-control" id="class_password" name="class_password" placeholder="Enter class password" required />
-                            </div>
-                            <button type="submit" class="btn btn-primary">Create Class</button>
-                        </form>
-                    </div>
+            <div class="card shadow-sm">
+                <div class="card-header bg-danger text-white">
+                <h4 class="text-center">Create a New Class</h4>
                 </div>
+                <div class="card-body d-flex align-items-center justify-content-center" style="height: 100%;">
+                <form action="/create_class" method="POST" class="w-75">
+                    <div class="mb-3">
+                    <label for="class_id" class="form-label">Class ID</label>
+                    <input type="text" class="form-control" id="class_id" name="class_id" placeholder="Enter unique class ID" required />
+                    </div>
+                    <div class="mb-3">
+                    <label for="class_name" class="form-label">Class Name</label>
+                    <input type="text" class="form-control" id="class_name" name="class_name" placeholder="Enter class name" required />
+                    </div>
+                    <div class="mb-3">
+                    <label for="class_password" class="form-label">Class Password</label>
+                    <input type="password" class="form-control" id="class_password" name="class_password" placeholder="Enter class password" required />
+                    </div>
+                    <button type="submit" class="btn btn-primary">Create Class</button>
+                </form>
+                </div>
+
+            </div>
             </div>
             <div class="col-md-6">
-                <div class="card h-100">
-                    <div class="card-header">
-                        <h4>Upload Attendance Video</h4>
-                    </div>
-                    <div class="card-body d-flex align-items-center justify-content-center" style="height: 100%;">
-                        <form action="/upload_video" method="POST" enctype="multipart/form-data" class="w-100">
-                            <div class="mb-3">
-                                <label for="class_id" class="form-label">Class ID</label>
-                                <input type="text" class="form-control" id="class_id" name="class_id" required />
-                            </div>
-                            <div class="mb-3">
-                                <label for="video_file" class="form-label">Upload Video</label>
-                                <input type="file" class="form-control" id="video_file" name="file" accept="video/mp4" required />
-                            </div>
-                            <button type="submit" class="btn btn-success">Upload Video</button>
-                        </form>
-                    </div>
+            <div class="card shadow-sm h-100">
+                <div class="card-header bg-danger text-white">
+                <h4 class='text-center'>Upload Attendance Video</h4>
                 </div>
+                <div class="card-body d-flex align-items-center justify-content-center" style="height: 100%;">
+                    <form action="/upload_video" method="POST" enctype="multipart/form-data" class="w-75">
+                        <div class="mb-3">
+                            <label for="class_id" class="form-label">Class ID</label>
+                            <input type="text" class="form-control" id="class_id" name="class_id" required />
+                        </div>
+                        <div class="mb-3">
+                            <label for="video_file" class="form-label">Upload Video</label>
+                            <input type="file" class="form-control" id="video_file" name="file" accept="video/mp4" required />
+                        </div>
+                        <button type="submit" class="btn btn-success">Upload Video</button>
+                    </form>
+                </div>
+            </div>
             </div>
         </div>
         <div class="mt-3">
-            <h3>Tiến hành điểm danh</h3>
+            <h3>Start Attendance</h3>
             <form id="attendance-form">
                 <div class="mb-3">
                     <label for="process_class_id" class="form-label">Class ID</label>
                     <input type="text" class="form-control" id="process_class_id" name="class_id" required />
                 </div>
                 <button type="submit" class="btn btn-primary">
-                    Tiến hành điểm danh
+                    Start Attendance
                 </button>
             </form>
-            <div id="attendance-result" class="mt-3">
-                <h4>Sinh viên có mặt:</h4>
-                <ul id="present-students-list"></ul>
-                <a id="download-excel" style="display: none;" class="btn btn-success" href="">Tải file Excel</a>
+        </div>
+        <div class="mt-3">
+            <h3>Present Students</h3>
+            <a href="/table" class="btn btn-info text-white">View Students Table</a>
+        </div>
+        <div class="row mt-5">
+            <div class="col-md-6">
+                <h3>View Attendance Records</h3>
+                <form action="/get_attendance" method="GET">
+                    <div class="mb-3">
+                        <label for="attendance_class_id" class="form-label">Class ID</label>
+                        <input type="text" class="form-control" id="attendance_class_id" name="class_id" required />
+                    </div>
+                    <button type="button" class="btn btn-secondary" onclick="viewStudents(document.getElementById('attendance_class_id').value)">View Students</button>
+                    <button type="submit" class="btn btn-info text-white" formaction="/export_attendance">Export Attendance</button>
+                </form>
             </div>
-        </div>
-
-        <div class="mt-5">
-            <h3>View Attendance Records</h3>
-            <form action="/get_attendance" method="GET">
-                <div class="mb-3">
-                    <label for="attendance_class_id" class="form-label">Class ID</label>
-                    <input type="text" class="form-control" id="attendance_class_id" name="class_id" required />
-                </div>
-                <button type="submit" class="btn btn-info">View Records</button>
-                <button type="button" class="btn btn-secondary" onclick="viewStudents(document.getElementById('attendance_class_id').value)">View Students</button>
-            </form>
-        </div>
-
-        <div class="mt-5">
-            <h3>Upload Student List (Excel)</h3>
-            <form action="/upload_student_list" method="POST" enctype="multipart/form-data">
-                <div class="mb-3">
-                    <label for="class_id_list" class="form-label">Class ID</label>
-                    <input type="text" class="form-control" id="class_id_list" name="class_id" required />
-                </div>
-                <div class="mb-3">
-                    <label for="student_list_file" class="form-label">Upload Excel File</label>
-                    <input type="file" class="form-control" id="student_list_file" name="file" accept=".xls,.xlsx" required />
-                </div>
-                <button type="submit" class="btn btn-primary">Upload List</button>
-            </form>
+            <div class="col-md-6">
+                <h3>Upload Student List (Excel)</h3>
+                <form action="/upload_student_list" method="POST" enctype="multipart/form-data">
+                    <div class="mb-3">
+                        <label for="class_id_list" class="form-label">Class ID</label>
+                        <input type="text" class="form-control" id="class_id_list" name="class_id" required />
+                    </div>
+                    <div class="mb-3">
+                        <label for="student_list_file" class="form-label">Upload Excel File</label>
+                        <input type="file" class="form-control" id="student_list_file" name="file" accept=".xls,.xlsx" required />
+                    </div>
+                    <button type="submit" class="btn btn-primary">Upload List</button>
+                </form>
+            </div>
         </div>
 
         <div class="mt-5">
@@ -144,108 +152,118 @@
                 <tbody></tbody>
             </table>
         </div>
+        <script>
+            document.addEventListener("DOMContentLoaded", function () {
+                const urlParams = new URLSearchParams(window.location.search);
+                const classId = urlParams.get("class_id");
+                const attendanceForm = document.getElementById("attendance-form");
+                const presentStudentsList = document.getElementById("present-students-list");
+                const downloadExcelLink = document.getElementById("download-excel");
+    
+                attendanceForm.addEventListener("submit", function(event) {
+                    event.preventDefault();
+                    const classId = document.getElementById("process_class_id").value;
+    
+                    fetch('/process_attendance', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/x-www-form-urlencoded',
+                        },
+                        body: `class_id=${classId}`
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.present_students) {
+                            presentStudentsList.innerHTML = ''; // Xóa danh sách cũ
+                            data.present_students.forEach(student_id => {
+                                const li = document.createElement("li");
+                                li.textContent = student_id;
+                                presentStudentsList.appendChild(li);
+                            });
+    
+                            // Hiển thị nút tải file Excel
+                            if (data.excel_filename) {
+                                downloadExcelLink.href = `/download/${data.excel_filename}`;
+                                downloadExcelLink.style.display = 'block';
+                            }
+                        } else {
+                            alert(data.error || 'Failed to process attendance');
+                        }
+                    })
+                    .catch(error => console.error('Error:', error));
+                });
+    
+                if (classId) {
+                    fetch(`/get_students/${classId}`)
+                        .then((response) => response.json())
+                        .then((students) => {
+                            const tableBody = document.querySelector(
+                                "#student-list-table tbody"
+                            );
+                            tableBody.innerHTML = "";
+                            students.forEach((student) => {
+                                const row = document.createElement("tr");
+                                row.innerHTML = `
+                                    <td>${student.student_id}</td>
+                                    <td>${student.name}</td>
+                                    <td><button class="btn btn-danger btn-sm" onclick="removeStudent('${student.student_id}')">Remove</button></td>
+                                `;
+                                tableBody.appendChild(row);
+                            });
+                        })
+                        .catch((error) => console.error("Error:", error));
+                }
+            });
+    
+            function removeStudent(studentId) {
+                if (confirm("Are you sure you want to remove this student?")) {
+                    fetch(`/remove_student/${studentId}`, { method: "DELETE" })
+                        .then((response) => response.json())
+                        .then((data) => {
+                            alert(data.message);
+                            // Refresh the student list
+                            const classId = new URLSearchParams(window.location.search).get(
+                                "class_id"
+                            );
+                            if (classId) {
+                                fetch(`/get_students/${classId}`)
+                                    .then((response) => response.json())
+                                    .then((students) => {
+                                        const tableBody = document.querySelector(
+                                            "#student-list-table tbody"
+                                        );
+                                        tableBody.innerHTML = "";
+                                        students.forEach((student) => {
+                                            const row = document.createElement("tr");
+                                            row.innerHTML = `
+                                                <td>${student.student_id}</td>
+                                                <td>${student.name}</td>
+                                                <td><button class="btn btn-danger btn-sm" onclick="removeStudent('${student.student_id}')">Remove</button></td>
+                                            `;
+                                            tableBody.appendChild(row);
+                                        });
+                                    })
+                                    .catch((error) => console.error("Error:", error));
+                            }
+                        })
+                        .catch((error) => console.error("Error:", error));
+                }
+            }
+            function viewStudents(classId) {
+                window.location.href = `/teacher_dashboard?class_id=${classId}`;
+            }
+        </script>
+    </div>
+
+
+    
+    <footer class="bg-dark text-white text-center py-3 mt-auto" style="width: 100%; position:fixed; bottom:0;">
+        <div class="container">
+        <p class="mb-0">&copy; 2025 Student Attendance System. VJU All rights reserved.</p>
+        </div>
+    </footer>   
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <script>
-        document.addEventListener("DOMContentLoaded", function () {
-            const urlParams = new URLSearchParams(window.location.search);
-            const classId = urlParams.get("class_id");
-            const attendanceForm = document.getElementById("attendance-form");
-            const presentStudentsList = document.getElementById("present-students-list");
-            const downloadExcelLink = document.getElementById("download-excel");
-
-            attendanceForm.addEventListener("submit", function(event) {
-                event.preventDefault();
-                const classId = document.getElementById("process_class_id").value;
-
-                fetch('/process_attendance', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/x-www-form-urlencoded',
-                    },
-                    body: `class_id=${classId}`
-                })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.present_students) {
-                        presentStudentsList.innerHTML = ''; // Xóa danh sách cũ
-                        data.present_students.forEach(student_id => {
-                            const li = document.createElement("li");
-                            li.textContent = student_id;
-                            presentStudentsList.appendChild(li);
-                        });
-
-                        // Hiển thị nút tải file Excel
-                        if (data.excel_filename) {
-                            downloadExcelLink.href = `/download/${data.excel_filename}`;
-                            downloadExcelLink.style.display = 'block';
-                        }
-                    } else {
-                        alert(data.error || 'Failed to process attendance');
-                    }
-                })
-                .catch(error => console.error('Error:', error));
-            });
-
-            if (classId) {
-                fetch(`/get_students/${classId}`)
-                    .then((response) => response.json())
-                    .then((students) => {
-                        const tableBody = document.querySelector(
-                            "#student-list-table tbody"
-                        );
-                        tableBody.innerHTML = "";
-                        students.forEach((student) => {
-                            const row = document.createElement("tr");
-                            row.innerHTML = `
-                                <td>${student.student_id}</td>
-                                <td>${student.name}</td>
-                                <td><button class="btn btn-danger btn-sm" onclick="removeStudent('${student.student_id}')">Remove</button></td>
-                            `;
-                            tableBody.appendChild(row);
-                        });
-                    })
-                    .catch((error) => console.error("Error:", error));
-            }
-        });
-
-        function removeStudent(studentId) {
-            if (confirm("Are you sure you want to remove this student?")) {
-                fetch(`/remove_student/${studentId}`, { method: "DELETE" })
-                    .then((response) => response.json())
-                    .then((data) => {
-                        alert(data.message);
-                        // Refresh the student list
-                        const classId = new URLSearchParams(window.location.search).get(
-                            "class_id"
-                        );
-                        if (classId) {
-                            fetch(`/get_students/${classId}`)
-                                .then((response) => response.json())
-                                .then((students) => {
-                                    const tableBody = document.querySelector(
-                                        "#student-list-table tbody"
-                                    );
-                                    tableBody.innerHTML = "";
-                                    students.forEach((student) => {
-                                        const row = document.createElement("tr");
-                                        row.innerHTML = `
-                                            <td>${student.student_id}</td>
-                                            <td>${student.name}</td>
-                                            <td><button class="btn btn-danger btn-sm" onclick="removeStudent('${student.student_id}')">Remove</button></td>
-                                        `;
-                                        tableBody.appendChild(row);
-                                    });
-                                })
-                                .catch((error) => console.error("Error:", error));
-                        }
-                    })
-                    .catch((error) => console.error("Error:", error));
-            }
-        }
-        function viewStudents(classId) {
-            window.location.href = `/teacher_dashboard?class_id=${classId}`;
-        }
-    </script>
 </body>
+
 </html>

@@ -70,7 +70,23 @@ def upload_video():
         return jsonify({'error': 'Invalid file type'}), 400
 
     return jsonify({'error': 'Unauthorized access'}), 403
-
+@app.route('/get_present_students_by_class', methods=['GET'])
+def get_present_students_by_class(class_id):
+    if 'role' in session and session['role'] == 'teacher':
+        try:
+            connection = mysql.connector.connect(**db_config)
+            cursor = connection.cursor(dictionary=True)
+            cursor.execute("SELECT student_id FROM attendance WHERE class_id = %s AND status = 'present' AND date = CURDATE()", (class_id,))
+            students = cursor.fetchall()
+            return jsonify(students)
+        except Exception as e:
+            return jsonify({'error': str(e)}), 500
+        finally:
+            if connection.is_connected():
+                cursor.close()
+                connection.close()
+    return jsonify({'error': 'Unauthorized'}), 403
+    
 @app.route('/process_attendance', methods=['POST'])
 def process_attendance():
     if 'role' in session and session['role'] == 'teacher':
@@ -86,7 +102,6 @@ def process_attendance():
             video_files = [f for f in os.listdir(video_folder) if os.path.isfile(os.path.join(video_folder, f)) and allowed_file(f)]
             if not video_files:
                 flash(f'No video found for class ID: {class_id}', 'danger')
-                return redirect(url_for('teacher_dashboard'))
 
             video_path = os.path.join(video_folder, video_files[0])
             print(f"Video path: {video_path}")
@@ -133,8 +148,7 @@ def process_attendance():
             # Tạo DataFrame và lưu vào file Excel
         print(present_students)
 
-    return jsonify({'error': 'Unauthorized access'}), 403
-        
+        return redirect(url_for('teacher_dashboard'))
         
 # Route: Register a student
 @app.route('/register_student', methods=['POST'])
@@ -279,10 +293,40 @@ def get_attendance():
         cursor.execute(sql, (class_id,))
         records = cursor.fetchall()
 
-        return jsonify({'attendance': records}), 200
+        return jsonify(records)
     except Exception as e:
         return jsonify({'error': str(e)}), 500
     
+
+# Route: Export attendance
+@app.route('/export_attendance', methods=['GET'])
+def export_attendance():
+    class_id = request.args.get('class_id')
+
+    try:
+        connection = mysql.connector.connect(**db_config)
+        cursor = connection.cursor(dictionary=True)
+
+        sql = "SELECT * FROM attendance WHERE class_id = %s"
+        cursor.execute(sql, (class_id,))
+        records = cursor.fetchall()
+
+        if not records:
+            return jsonify({'error': 'No attendance records found'}), 404
+
+        df = pd.DataFrame(records)
+        download_folder = os.path.join(os.path.expanduser('~'), 'Downloads')
+        output_file = os.path.join(download_folder, f'attendance_{class_id}.xlsx')
+        df.to_excel(output_file, index=False)
+
+        return jsonify({'message': 'Attendance exported successfully', 'file_path': output_file}), 200
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+    finally:
+        if connection.is_connected():
+            cursor.close()
+            connection.close()
+        
 @app.route('/create_class', methods=['POST'])
 def create_class():
     if 'role' in session and session['role'] == 'teacher':
@@ -290,13 +334,14 @@ def create_class():
         class_name = request.form.get('class_name')
         class_password = request.form.get('class_password')
         teacher_id = session['user_id']
+        # teacher_id is used in the SQL insert statement
 
         if not (class_id and class_name and class_password):
             flash('All fields are required!', 'danger')
             return redirect(url_for('teacher_dashboard'))
 
         try:
-            # Kết nối cơ sở dữ liệu
+                # Kết nối cơ sở dữ liệu
             connection = mysql.connector.connect(**db_config)
             cursor = connection.cursor()
 
@@ -307,7 +352,7 @@ def create_class():
                 return redirect(url_for('teacher_dashboard'))
 
             # Lưu lớp học vào cơ sở dữ liệu
-            sql = "INSERT INTO classes (id, class_name, class_password, teacher_id) VALUES (%s, %s, %s, %s)"
+            sql = "INSERT INTO classes (id, clas    s_name, class_password, teacher_id) VALUES (%s, %    s, %s, %s)"
             cursor.execute(sql, (class_id, class_name, class_password, teacher_id))
             connection.commit()
 
@@ -318,10 +363,6 @@ def create_class():
             cursor.close()
             connection.close()
 
-        return redirect(url_for('teacher_dashboard'))
-
-    flash('Unauthorized access', 'danger')
-    return redirect(url_for('login'))
     
 # Route: Home
 @app.route('/')
@@ -357,23 +398,23 @@ def upload_student_list():
                 connection = mysql.connector.connect(**db_config)
                 cursor = connection.cursor()
 
-                # Thêm sinh viên vào cơ sở dữ liệu
+
                 for index, row in df.iterrows():
                     student_id = row['student_id']
                     name = row['name']
-                    
-                    # Kiểm tra xem sinh viên đã tồn tại hay chưa dựa vào student_id
-                    cursor.execute("SELECT * FROM students WHERE student_id = %s", (student_id,))
-                    existing_student = cursor.fetchone()
+                
+                # Kiểm tra xem sinh viên đã tồn tại hay chưa dựa vào student_id
+                cursor.execute("SELECT * FROM students WHERE student_id = %s", (student_id,))
+                existing_student = cursor.fetchone()
 
-                    if existing_student:
-                        # Nếu sinh viên đã tồn tại, cập nhật thông tin sinh viên
-                        update_sql = "UPDATE students SET name = %s, class_id = %s WHERE student_id = %s"
-                        cursor.execute(update_sql, (name, class_id, student_id))
-                    else:
-                        # Nếu sinh viên chưa tồn tại, thêm mới sinh viên
-                        sql = "INSERT INTO students (student_id, name, class_id) VALUES (%s, %s, %s)"
-                        cursor.execute(sql, (student_id, name, class_id))
+                if existing_student:
+                    # Nếu sinh viên đã tồn tại, cập nhật thông tin sinh viên
+                    update_sql = "UPDATE students SET name = %s, class_id = %s WHERE student_id = %s"
+                    cursor.execute(update_sql, (name, class_id, student_id))
+                else:
+                    # Nếu sinh viên chưa tồn tại, thêm mới sinh viên
+                    sql = "INSERT INTO students (student_id, name, class_id) VALUES (%s, %s, %s)"
+                    cursor.execute(sql, (student_id, name, class_id))
 
                 connection.commit()
                 flash('Student list uploaded successfully', 'success')
@@ -404,23 +445,6 @@ def get_students(class_id):
             cursor.execute("SELECT student_id, name FROM students WHERE class_id = %s", (class_id,))
             students = cursor.fetchall()
             return jsonify(students)
-        except Exception as e:
-            return jsonify({'error': str(e)}), 500
-        finally:
-            if connection.is_connected():
-                cursor.close()
-                connection.close()
-    return jsonify({'error': 'Unauthorized'}), 403
-
-@app.route('/remove_student/<student_id>', methods=['DELETE'])
-def remove_student(student_id):
-    if 'role' in session and session['role'] == 'teacher':
-        try:
-            connection = mysql.connector.connect(**db_config)
-            cursor = connection.cursor()
-            cursor.execute("DELETE FROM students WHERE student_id = %s", (student_id,))
-            connection.commit()
-            return jsonify({'message': 'Student removed successfully'}), 200
         except Exception as e:
             return jsonify({'error': str(e)}), 500
         finally:

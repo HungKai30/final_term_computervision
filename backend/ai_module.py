@@ -73,7 +73,7 @@ def process_video_and_attendance(video_path, class_id, root_path):
         attendance.add(student_id)
     print(f"Attendance: {attendance}") # Debug
  
-
+    
 
     video_capture = cv2.VideoCapture(video_path)
     if not video_capture.isOpened():
