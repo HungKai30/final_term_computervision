@@ -75,33 +75,66 @@ def upload_video():
 def process_attendance():
     if 'role' in session and session['role'] == 'teacher':
         class_id = request.form.get('class_id')
+
         if not class_id:
-            return jsonify({'error': 'Class ID is required'}), 400
+            flash('Class ID not found', 'danger')
+            return redirect(url_for('teacher_dashboard'))
 
+        video_folder = os.path.join(app.config['UPLOAD_FOLDER'], class_id)
+        print(f"Video folder path: {video_folder}")
         try:
-            # Process the video and get attendance data
-            attendance_data = process_video_and_attendance(class_id)
+            video_files = [f for f in os.listdir(video_folder) if os.path.isfile(os.path.join(video_folder, f)) and allowed_file(f)]
+            if not video_files:
+                flash(f'No video found for class ID: {class_id}', 'danger')
+                return redirect(url_for('teacher_dashboard'))
 
-            # Save attendance data to the database
+            video_path = os.path.join(video_folder, video_files[0])
+            print(f"Video path: {video_path}")
+
+            attendance_result = process_video_and_attendance(video_path, class_id, app.root_path)
+            print(f"Attendance result: {attendance_result}")
+
             connection = mysql.connector.connect(**db_config)
-            cursor = connection.cursor()
+            cursor = connection.cursor(dictionary=True)
+            cursor.execute("SELECT student_id FROM students WHERE class_id = %s", (class_id,))
+            students_in_class = [student['student_id'] for student in cursor.fetchall()]
 
-            for student_id, status in attendance_data.items():
-                sql = "INSERT INTO attendance (class_id, student_id, status) VALUES (%s, %s, %s)"
-                cursor.execute(sql, (class_id, student_id, status))
+            present_students = []
+            absent_students = []
+            for student_id in students_in_class:
+                if student_id in attendance_result:
+                    status = 'present'
+                else:
+                    status = 'absent'
+
+                cursor.execute("SELECT * FROM attendance WHERE class_id = %s AND student_id = %s AND date = CURDATE()", (class_id, student_id))
+                existing_record = cursor.fetchone()
+
+                if existing_record:
+                    cursor.execute("UPDATE attendance SET status = %s WHERE class_id = %s AND student_id = %s AND date = CURDATE()", (status, class_id, student_id))
+                else:
+                    cursor.execute("INSERT INTO attendance (class_id, student_id, date, status) VALUES (%s, %s, CURDATE(), %s)", (class_id, student_id, status))
+
+                if status == 'present':
+                    if student_id not in present_students:
+                        present_students.append(student_id)
+                else:
+                    if student_id in present_students:
+                        status = 'present'
+                        cursor.execute("UPDATE attendance SET status = %s WHERE class_id = %s AND student_id = %s AND date = CURDATE()", (status, class_id, student_id))
+                    else:
+                        absent_students.append(student_id)
 
             connection.commit()
-            return jsonify({'message': 'Attendance processed successfully'}), 200
-
         except Exception as e:
-            return jsonify({'error': str(e)}), 500
+            flash(f'Error processing attendance: {e}', 'danger')
+            return redirect(url_for('teacher_dashboard'))
 
-        finally:
-            if connection.is_connected():
-                cursor.close()
-                connection.close()
+            # Tạo DataFrame và lưu vào file Excel
+        print(present_students)
 
-            return jsonify({'error': 'Unauthorized access'}), 403
+    return jsonify({'error': 'Unauthorized access'}), 403
+        
         
 # Route: Register a student
 @app.route('/register_student', methods=['POST'])

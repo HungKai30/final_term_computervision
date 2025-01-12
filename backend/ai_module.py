@@ -6,7 +6,9 @@ import mysql.connector
 import sys
 import csv
 from datetime import datetime
-sys.stdout.reconfigure(encoding='utf-8')
+
+
+
 # MySQL setup
 db_config = {
     'host': 'localhost',
@@ -66,6 +68,11 @@ def process_video_and_attendance(video_path, class_id, root_path):
     print(f"Known encodings: {known_encodings}") # Debug
     print(f"Student IDs: {student_ids}") # Debug
     
+    attendance = set()
+    for student_id in student_ids:
+        attendance.add(student_id)
+    print(f"Attendance: {attendance}") # Debug
+ 
 
 
     video_capture = cv2.VideoCapture(video_path)
@@ -73,6 +80,7 @@ def process_video_and_attendance(video_path, class_id, root_path):
         print(f"Error: Could not open video at {video_path}.")
         return []
     
+    return attendance;
  
 
     
