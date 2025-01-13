@@ -70,22 +70,10 @@ def upload_video():
         return jsonify({'error': 'Invalid file type'}), 400
 
     return jsonify({'error': 'Unauthorized access'}), 403
-@app.route('/get_present_students_by_class', methods=['GET'])
-def get_present_students_by_class(class_id):
-    if 'role' in session and session['role'] == 'teacher':
-        try:
-            connection = mysql.connector.connect(**db_config)
-            cursor = connection.cursor(dictionary=True)
-            cursor.execute("SELECT student_id FROM attendance WHERE class_id = %s AND status = 'present' AND date = CURDATE()", (class_id,))
-            students = cursor.fetchall()
-            return jsonify(students)
-        except Exception as e:
-            return jsonify({'error': str(e)}), 500
-        finally:
-            if connection.is_connected():
-                cursor.close()
-                connection.close()
-    return jsonify({'error': 'Unauthorized'}), 403
+
+    
+        
+
     
 @app.route('/process_attendance', methods=['POST'])
 def process_attendance():
@@ -263,7 +251,9 @@ def login():
             connection.close()
 
     return render_template('login.html')
-
+@app.route('/table', methods=['GET'])
+def table():
+    return render_template('table.html')
 # Route: Teacher Dashboard
 @app.route('/teacher_dashboard')
 def teacher_dashboard():
@@ -326,7 +316,24 @@ def export_attendance():
         if connection.is_connected():
             cursor.close()
             connection.close()
-        
+@app.route('/get_present_students', methods=['GET'])
+def get_present_students_by_class():
+    if 'role' in session and session['role'] == 'teacher':
+        class_id = request.args.get('class_id')
+        try:
+            connection = mysql.connector.connect(**db_config)
+            cursor = connection.cursor(dictionary=True) 
+            cursor.execute("SELECT student_id FROM attendance WHERE class_id = %s AND status = 'present' AND date = CURDATE()", (class_id,))
+            present_students = [student['student_id'] for student in cursor.fetchall()]
+            return render_template('present_students.html', present_students=present_students)
+        except Exception as e:
+            return jsonify({'error': str(e)}), 500
+        finally:
+            if connection.is_connected():
+                cursor.close()
+                connection.close()
+    return jsonify({'error': 'Unauthorized'}), 403
+            
 @app.route('/create_class', methods=['POST'])
 def create_class():
     if 'role' in session and session['role'] == 'teacher':
@@ -352,7 +359,7 @@ def create_class():
                 return redirect(url_for('teacher_dashboard'))
 
             # Lưu lớp học vào cơ sở dữ liệu
-            sql = "INSERT INTO classes (id, clas    s_name, class_password, teacher_id) VALUES (%s, %    s, %s, %s)"
+            sql = "INSERT INTO classes (id, class_name, class_password, teacher_id) VALUES (%s, %    s, %s, %s)"
             cursor.execute(sql, (class_id, class_name, class_password, teacher_id))
             connection.commit()
 
