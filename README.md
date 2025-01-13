@@ -123,4 +123,3 @@
 
 ## Thông tin liên hệ
 *   **Nhóm**: Nguyễn Hữu Giáp + Nguyễn Cảnh Hưng + Nguyễn Chí Nhân + Hoàng Thiện Quang
-*   **Email**: 22110120@st.vju.ac.vn
